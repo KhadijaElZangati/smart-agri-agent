@@ -3,47 +3,44 @@ import requests
 from datetime import datetime, timedelta
 from supabase import create_client, Client
 
-# --- 1. Setup from GitHub Secrets ---
-# These must match your GitHub Secret names exactly
-# --- 1. Configuration & Secrets ---
+# --- 1. Configuration ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 # --- 2. Dynamic Inputs with Souss-Massa Defaults ---
-# This looks for 'FARM_LAT' in GitHub, otherwise uses Agadir cordinates
-LAT = float(os.environ.get("FARM_LAT", 30.42)) 
-LON = float(os.environ.get("FARM_LON", -9.60))
-NAME = os.environ.get("FARM_NAME", "Default Farm - Souss-Massa")
+# This allows our future Coordinator Agent to send different coordinates [cite: 107, 108]
+FARM_LAT = float(os.environ.get("FARM_LAT", 30.42)) 
+FARM_LON = float(os.environ.get("FARM_LON", -9.60))
+FARM_NAME = os.environ.get("FARM_NAME", "Default Farm - Souss-Massa")
 
 def run_agent():
-    print(f"Agent starting for {NAME} at ({LAT}, {LON})...")
-    # ... the rest of your logic stays the same, just use LAT and LON ...
     if not SUPABASE_URL or not SUPABASE_KEY:
-        print(" Error: SUPABASE_URL or SUPABASE_KEY is missing from environment secrets!")
+        print(" Error: Supabase credentials missing!")
         return
 
-    print(f"Agent starting: Connecting to {SUPABASE_URL}...")
+    print(f"Agent starting for {FARM_NAME} at ({FARM_LAT}, {FARM_LON})...")
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-    # 2. NASA Historical Data (Cleaning -999.0 values)
+    # 3. Fetch NASA Data
     today = datetime.now()
     start = (today - timedelta(days=3)).strftime("%Y%m%d")
     end = today.strftime("%Y%m%d")
+    
+    # We use FARM_LON and FARM_LAT here to match the definitions above
     nasa_url = f"https://power.larc.nasa.gov/api/temporal/daily/point?parameters=T2M,PRECTOTCORR,RH2M&community=AG&longitude={FARM_LON}&latitude={FARM_LAT}&start={start}&end={end}&format=JSON"
     nasa_res = requests.get(nasa_url).json()
     
-    # Clean the -999.0 sensor errors
+    # Clean -999.0 values
     params = nasa_res['properties']['parameter']
     for p in params:
         for d in params[p]:
-            if params[p][d] == -999.0: 
-                params[p][d] = None
+            if params[p][d] == -999.0: params[p][d] = None
 
-    # 3. Open-Meteo 7-Day Forecast
+    # 4. Fetch Open-Meteo Forecast
     forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={FARM_LAT}&longitude={FARM_LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Africa/Casablanca"
     forecast_res = requests.get(forecast_url).json()
 
-    # 4. Prepare JSON Output for Coordinator Agent
+    # 5. Build Output
     agent_output = {
         "timestamp": datetime.now().isoformat(),
         "historical": params,
@@ -51,20 +48,19 @@ def run_agent():
         "alerts": []
     }
 
-    # Custom alert for water scarcity in Souss-Massa 
+    # Souss-Massa specific water scarcity alert [cite: 94, 99]
     if sum(forecast_res['daily'].get('precipitation_sum', [0])) < 0.2:
         agent_output["alerts"].append("Critical: No rain forecast. Adjust irrigation.")
 
-    # 5. Insert into Supabase weather_logs table
-    data = {
-        "farm_name": "Test Farm - Souss-Massa",
+    # 6. Sync to Supabase
+    supabase.table("weather_logs").insert({
+        "farm_name": FARM_NAME,
         "latitude": FARM_LAT,
         "longitude": FARM_LON,
         "weather_data": agent_output 
-    }
+    }).execute()
     
-    supabase.table("weather_logs").insert(data).execute()
-    print(" Success! Data pushed to Supabase.")
+    print(" Success! Dynamic Weather Data Synced.")
 
 if __name__ == "__main__":
     run_agent()
