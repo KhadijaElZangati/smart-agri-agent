@@ -17,6 +17,11 @@ FARM_NAME = "Test Farm - Souss-Massa"
 
 def run_agent():
     # --- 2. Fetch NASA Historical Data ---
+    if not URL or not KEY:
+        print(" Error: SUPABASE_URL or SUPABASE_KEY is missing from environment secrets!")
+        return
+    print(f"Agent starting: Connecting to {URL}...")
+    
     today = datetime.now()
     start = (today - timedelta(days=3)).strftime("%Y%m%d")
     end = today.strftime("%Y%m%d")
