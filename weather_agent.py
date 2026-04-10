@@ -5,15 +5,19 @@ from supabase import create_client, Client
 
 # --- 1. Setup from GitHub Secrets ---
 # These must match your GitHub Secret names exactly
+# --- 1. Configuration & Secrets ---
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-# Farm location: Agadir region
-FARM_LAT = 30.42 
-FARM_LON = -9.60
+# --- 2. Dynamic Inputs with Souss-Massa Defaults ---
+# This looks for 'FARM_LAT' in GitHub, otherwise uses Agadir cordinates
+LAT = float(os.environ.get("FARM_LAT", 30.42)) 
+LON = float(os.environ.get("FARM_LON", -9.60))
+NAME = os.environ.get("FARM_NAME", "Default Farm - Souss-Massa")
 
 def run_agent():
-    # Check if we have our connection info first
+    print(f"Agent starting for {NAME} at ({LAT}, {LON})...")
+    # ... the rest of your logic stays the same, just use LAT and LON ...
     if not SUPABASE_URL or not SUPABASE_KEY:
         print(" Error: SUPABASE_URL or SUPABASE_KEY is missing from environment secrets!")
         return
