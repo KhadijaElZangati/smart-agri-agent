@@ -4,13 +4,13 @@ import torch
 from PIL import Image
 from datetime import datetime
 from torchvision import transforms
-from transformers import SegformerForImageClassification
+# We now import the Config class specifically
+from transformers import SegformerConfig, SegformerForImageClassification
 
 # --- 1. DYNAMIC PATH CONFIGURATION ---
-# Points to the 'agents/' folder
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Localized paths for total autonomy
+# Localized paths
 CONFIG_PATH = os.path.join(BASE_DIR, "..", "models", "mit-b0-config")
 MODEL_PATH = os.path.join(BASE_DIR, "..", "models", "weatherModel.pth")
 IMAGE_FEED_DIR = os.path.join(BASE_DIR, "..", "local_camera_feed")
@@ -21,27 +21,32 @@ WEATHER_CLASSES = [
     "lightning", "rain", "rainbow", "rime", "sandstorm", "snow"
 ]
 
-# --- 2. LOAD THE BRAIN (Zero-Internet Mode) ---
-print(f"[{datetime.now().strftime('%H:%M:%S')}] Initializing MiT-B0 from local config...")
+# --- 2. LOAD THE BRAIN (The Zero-Internet Method) ---
+print(f"[{datetime.now().strftime('%H:%M:%S')}] Building MiT-B0 architecture from local blueprints...")
 
-# Safety check for the config folder
-if not os.path.exists(CONFIG_PATH):
-    raise OSError(f"❌ CRITICAL: Configuration folder missing at {CONFIG_PATH}. Run the config-save command first!")
+# 1. Load the Blueprints (config.json)
+try:
+    config = SegformerConfig.from_pretrained(CONFIG_PATH, local_files_only=True)
+    # Ensure the label count matches your training
+    config.num_labels = 11 
+except Exception as e:
+    raise OSError(f" CRITICAL: Could not load config from {CONFIG_PATH}. Run the config-save command first! Error: {e}")
 
-# Load the architecture using the local folder ONLY
-model = SegformerForImageClassification.from_pretrained(
-    CONFIG_PATH, 
-    local_files_only=True, 
-    num_labels=11, 
-    ignore_mismatched_sizes=True
-)
+# 2. Build the Model Shell (The Body)
+# This creates the architecture in memory WITHOUT looking for weights files
+model = SegformerForImageClassification(config)
 
-# Load the custom weights (.pth file)
+# 3. Load your Custom Weights (The Brain)
 if not os.path.exists(MODEL_PATH):
-    raise FileNotFoundError(f"❌ ERROR: Trained weights not found at {MODEL_PATH}!")
+    raise FileNotFoundError(f" ERROR: Trained weights (.pth) not found at {MODEL_PATH}!")
 
-model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
-model.eval()
+try:
+    model.load_state_dict(torch.load(MODEL_PATH, map_location="cpu"))
+    model.eval()
+    print("  Success: Model loaded fully offline using custom weights.")
+except Exception as e:
+    print(f"  ERROR: Failed to load weights into architecture: {e}")
+    exit(1)
 
 # Research-standard pre-processing
 transform = transforms.Compose([
@@ -51,6 +56,7 @@ transform = transforms.Compose([
 ])
 
 def run_real_inference(image_path):
+    """Performs real vision classification on the edge"""
     img = Image.open(image_path).convert("RGB")
     input_tensor = transform(img).unsqueeze(0) 
     
@@ -64,7 +70,7 @@ def run_real_inference(image_path):
 
 def run_agent():
     if not os.path.exists(IMAGE_FEED_DIR):
-        print(f"❌ ERROR: Camera feed directory {IMAGE_FEED_DIR} missing.")
+        print(f" ERROR: Camera feed directory {IMAGE_FEED_DIR} missing.")
         return
 
     print(f"🔍 Offline Agent monitoring feed...")
@@ -73,10 +79,10 @@ def run_agent():
              if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
     
     if not files:
-        print(" No input images found.")
+        print(" No input images found in feed.")
         return
 
-    # Process latest 'capture'
+    # Process latest 'capture' based on modification time
     latest_img = max(files, key=os.path.getmtime)
     condition, conf = run_real_inference(latest_img)
 
@@ -89,7 +95,9 @@ def run_agent():
         "is_offline_mode": True
     }
 
+    # Ensure config directory exists
     os.makedirs(os.path.dirname(LOCAL_WEATHER_JSON), exist_ok=True)
+
     with open(LOCAL_WEATHER_JSON, 'w') as f:
         json.dump(weather_state, f, indent=2)
     
