@@ -27,6 +27,10 @@ Vision Perception: Verified the model’s ability to perform "now-casting" with 
 Phase 4: System Refactoring & Modularity
 Separation of Concerns: Transitioned from a flat-file structure to a modular directory architecture:
 
+<img width="1368" height="768" alt="Gemini_Generated_Image_lxg87dlxg87dlxg8" src="https://github.com/user-attachments/assets/397c9dd1-5994-408f-9874-3fce9ad98101" />
+
+
+
 agents/: All operational logic (Online/Offline).
 
 models/: Binary weights (.pth) and serialized brains.
