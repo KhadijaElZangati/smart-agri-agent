@@ -1,0 +1,11 @@
+# Data and Models
+data/
+local_camera_feed/
+
+# Environments and Cache
+myenv/
+__pycache__/
+*.pyc
+
+# Local States
+local_weather_state.json
