@@ -1,0 +1,14 @@
+{
+  "agent": "irrigation_agent_online",
+  "timestamp": "2026-04-19T18:09:00.745310",
+  "farm_name": "Default Farm - Souss-Massa",
+  "irrigation_plan": {
+    "crop": "Tomato",
+    "daily_need_mm": 5.17,
+    "expected_rain_mm": 0.0,
+    "required_irrigation_mm": 5.17,
+    "action_status": "WATERING_REQUIRED"
+  },
+  "status": "SCHEDULING_COMPLETE",
+  "is_offline_mode": false
+}

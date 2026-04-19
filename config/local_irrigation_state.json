@@ -1,0 +1,13 @@
+{
+  "agent": "irrigation_agent_offline",
+  "timestamp": "2026-04-19T18:01:00.850617",
+  "local_readings": {
+    "current_moisture": 28.5
+  },
+  "irrigation_plan": {
+    "required_irrigation_mm": 3.25,
+    "action_status": "MAINTENANCE_WATERING"
+  },
+  "is_offline_mode": true,
+  "coordinator_note": "Direct sensor-to-pump logic triggered."
+}
