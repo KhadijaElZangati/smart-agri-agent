@@ -1,0 +1,12 @@
+{
+  "agent": "soil_agent_offline",
+  "timestamp": "2026-04-19T16:01:21.198577",
+  "readings": {
+    "moisture": 28.5,
+    "ph_level": 6.8,
+    "temperature_c": 24.2
+  },
+  "health_status": "CRITICAL_DRY",
+  "is_offline_mode": true,
+  "source": "Local T450 Hardware Interface"
+}
