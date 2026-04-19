@@ -1,0 +1,19 @@
+{
+  "agent": "soil_agent_online",
+  "timestamp": "2026-04-19T17:33:27.693071",
+  "farm_name": "Default Farm - Souss-Massa",
+  "regional_data": {
+    "source": "SoilGrids 2.0",
+    "pH_baseline": 6.5,
+    "nitrogen": "Low (Souss-Massa typical)",
+    "clay_sand_silt": "Sandy-Loam (FAO HWSD Classification)",
+    "fertility_class": "Class 3 (Moderate)"
+  },
+  "iot_readings": {
+    "moisture": 28.5,
+    "ph_level": 6.8,
+    "temperature_c": 24.2
+  },
+  "status": "ANALYSIS_COMPLETE",
+  "is_offline_mode": false
+}
