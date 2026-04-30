@@ -9,3 +9,17 @@ __pycache__/
 
 # Local States
 local_weather_state.json
+# Security: DO NOT PUSH YOUR KEYS
+.env
+
+# Python Environment
+myenv/
+__pycache__/
+*.pyc
+
+# Local Data Buffers (Keep your farm data private)
+config/*.json
+!config/soil_state.json  # Keep this if it's a template
+__pycache__/
+config/*.json
+!config/soil_state.json
